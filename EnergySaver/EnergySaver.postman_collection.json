@@ -1,0 +1,284 @@
+{
+  "info": {
+    "name": "EnergySaver API - Case Study",
+    "description": "Smart Home Energy Manager API Collection strictly covering the 12 Case Study requirements.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5001" },
+    { "key": "token", "value": "" },
+    { "key": "admin_token", "value": "" },
+    { "key": "home_id", "value": "" },
+    { "key": "device_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth (Req 1)",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pratik Swain\",\n  \"email\": \"pratik@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pratik@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Homes (Req 2)",
+      "item": [
+        {
+          "name": "Register Home",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/homes",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Smart Home\",\n  \"address\": \"123 Green Street\",\n  \"city\": \"Bhubaneswar\",\n  \"neighborhood\": \"Greenfield\"\n}"
+            }
+          }
+        },
+        {
+          "name": "View Registered Homes",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/homes",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Smart Devices (Req 3)",
+      "item": [
+        {
+          "name": "Add Smart Device to Home",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/devices",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"home\": \"{{home_id}}\",\n  \"name\": \"Living Room AC\",\n  \"type\": \"AC\",\n  \"brand\": \"Daikin\",\n  \"powerRating\": 1500\n}"
+            }
+          }
+        },
+        {
+          "name": "View Smart Devices",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/devices",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Energy Readings (Req 4 & 5)",
+      "item": [
+        {
+          "name": "Record Energy Reading",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/readings",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device\": \"{{device_id}}\",\n  \"energyConsumed\": 3.5,\n  \"voltage\": 230,\n  \"current\": 8.5\n}"
+            }
+          }
+        },
+        {
+          "name": "View Energy Readings History",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/readings",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Usage Limits (Req 6)",
+      "item": [
+        {
+          "name": "Set Energy Usage Limit",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/limits",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"home\": \"{{home_id}}\",\n  \"limitType\": \"daily\",\n  \"limitValue\": 10,\n  \"alertPercentage\": 90\n}"
+            }
+          }
+        },
+        {
+          "name": "View Energy Usage Limits",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/limits",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Limit Alerts (Req 7)",
+      "item": [
+        {
+          "name": "View Limit Breach Alerts",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/alerts",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Neighborhood Comparison (Req 8)",
+      "item": [
+        {
+          "name": "Compare with Neighborhood Average",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/compare/neighborhood",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Monthly Reports (Req 9)",
+      "item": [
+        {
+          "name": "Get Monthly Report",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/reports/monthly",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Energy Tips (Req 10)",
+      "item": [
+        {
+          "name": "Get Energy-Saving Tips",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/tips",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Admin Management (Req 12)",
+      "item": [
+        {
+          "name": "Admin View Device Templates",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/admin/templates",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }]
+          }
+        },
+        {
+          "name": "Admin Create Device Template",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/admin/templates",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Smart Inverter AC\",\n  \"type\": \"AC\",\n  \"defaultPowerRating\": 1500,\n  \"description\": \"Energy star 5-star inverter AC\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Admin Create Energy Tip",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/tips",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Use LED Lights\",\n  \"description\": \"Replacing incandescent bulbs with LEDs saves up to 75% lighting energy.\",\n  \"category\": \"lighting\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Push Notifications (Req 11)",
+      "item": [
+        {
+          "name": "Send Push Notification",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/notifications/send",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"sample_device_token\",\n  \"title\": \"Limit Exceeded\",\n  \"message\": \"Your daily limit has been exceeded.\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

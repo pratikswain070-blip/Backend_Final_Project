@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EnergySaver - Smart Home Energy Manager</title>
+  
+  <!-- Clean typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js for energy readings graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Socket.io for real-time readings -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-title">EnergySaver</span>
+      <span class="socket-pill" id="socketStatus">● Live Socket Active</span>
+    </div>
+
+    <div class="nav-user">
+      <span class="user-greeting">Logged in as: <strong id="currentUserName">Pratik</strong> (<span id="currentUserRole">user</span>)</span>
+      <button class="btn btn-sm btn-outline" id="switchUserBtn">Switch Account</button>
+      <button class="btn btn-sm btn-danger" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs Directly Matching Backend Subsystems -->
+  <nav class="tab-bar">
+    <button class="tab-item active" data-tab="tab-homes-devices">1. Homes & Devices</button>
+    <button class="tab-item" data-tab="tab-readings">2. Energy Readings (IoT)</button>
+    <button class="tab-item" data-tab="tab-limits-alerts">3. Limits & Alerts</button>
+    <button class="tab-item" data-tab="tab-reports-compare">4. Reports & Comparison</button>
+    <button class="tab-item" data-tab="tab-tips-admin">5. Tips & Admin</button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- Active Home Selector Bar -->
+    <div class="home-bar">
+      <label for="homeSelect"><strong>Active Home:</strong></label>
+      <select id="homeSelect" class="form-control" style="max-width: 320px;">
+        <option value="">Loading homes...</option>
+      </select>
+      <span class="text-muted" id="homeAddressText"></span>
+    </div>
+
+    <!-- =========================================================================
+         TAB 1: HOMES & DEVICES (homeController & deviceController)
+         ========================================================================= -->
+    <section id="tab-homes-devices" class="tab-content active">
+      <div class="grid-2">
+        
+        <!-- Left: Registered Homes -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Register a Home (POST /api/homes)</h3>
+          </div>
+          <form id="addHomeForm" class="card-body">
+            <div class="form-group">
+              <label>Home Name</label>
+              <input type="text" id="homeName" class="form-control" placeholder="e.g. Eco Smart Villa" required>
+            </div>
+            <div class="form-group">
+              <label>Address</label>
+              <input type="text" id="homeAddress" class="form-control" placeholder="e.g. 104 Infocity Road" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>City</label>
+                <input type="text" id="homeCity" class="form-control" value="Bhubaneswar" required>
+              </div>
+              <div class="form-group">
+                <label>Neighborhood</label>
+                <input type="text" id="homeNeighborhood" class="form-control" placeholder="e.g. Patia" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Home</button>
+          </form>
+        </div>
+
+        <!-- Right: Add Smart Device -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Add Smart Device (POST /api/devices)</h3>
+          </div>
+          <form id="addDeviceForm" class="card-body">
+            <div class="form-group">
+              <label>Device Name</label>
+              <input type="text" id="deviceName" class="form-control" placeholder="e.g. Master Bed AC" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Device Type</label>
+                <select id="deviceType" class="form-control" required>
+                  <option value="AC">AC</option>
+                  <option value="Heater">Heater</option>
+                  <option value="Geyser">Geyser</option>
+                  <option value="Refrigerator">Refrigerator</option>
+                  <option value="Washing Machine">Washing Machine</option>
+                  <option value="TV">TV</option>
+                  <option value="Fan">Fan</option>
+                  <option value="EV Charger">EV Charger</option>
+                  <option value="Microwave">Microwave</option>
+                  <option value="Light">Light</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Brand</label>
+                <input type="text" id="deviceBrand" class="form-control" placeholder="e.g. Daikin">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Power Rating (Watts)</label>
+              <input type="number" id="devicePower" class="form-control" value="1500" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Device</button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Devices List Table -->
+      <div class="card mt-20">
+        <div class="card-header">
+          <h3>Connected Devices for Active Home (GET /api/devices)</h3>
+        </div>
+        <div class="card-body">
+          <table class="table" id="devicesTable">
+            <thead>
+              <tr>
+                <th>Device Name</th>
+                <th>Type</th>
+                <th>Brand</th>
+                <th>Power Rating</th>
+                <th>Status (PUT /api/devices/:id)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="devicesTableBody">
+              <tr><td colspan="6" class="text-center">No devices found.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         TAB 2: ENERGY READINGS (readingController + Socket.io)
+         ========================================================================= -->
+    <section id="tab-readings" class="tab-content">
+      <div class="grid-2">
+        
+        <!-- Left: Record Reading Form -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Record Energy Reading (POST /api/readings)</h3>
+            <span class="badge-accent">Broadcasts via Socket.io</span>
+          </div>
+          <form id="addReadingForm" class="card-body">
+            <div class="form-group">
+              <label>Select Device</label>
+              <select id="readingDeviceSelect" class="form-control" required></select>
+            </div>
+            <div class="form-group">
+              <label>Energy Consumed (kWh)</label>
+              <input type="number" step="0.1" id="readingKwh" class="form-control" value="3.5" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Voltage (V)</label>
+                <input type="number" id="readingVoltage" class="form-control" value="230" required>
+              </div>
+              <div class="form-group">
+                <label>Current (A)</label>
+                <input type="number" step="0.1" id="readingCurrent" class="form-control" value="7.5" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Transmit Reading</button>
+          </form>
+        </div>
+
+        <!-- Right: Telemetry Chart -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Live Telemetry Chart (Chart.js)</h3>
+          </div>
+          <div class="card-body chart-wrapper">
+            <canvas id="readingsChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Recent Readings Table -->
+      <div class="card mt-20">
+        <div class="card-header">
+          <h3>Recent Readings Stream (GET /api/readings)</h3>
+          <button class="btn btn-sm btn-outline" id="refreshReadingsBtn">Refresh</button>
+        </div>
+        <div class="card-body">
+          <table class="table" id="readingsTable">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>Energy (kWh)</th>
+                <th>Voltage (V)</th>
+                <th>Current (A)</th>
+                <th>Calculated Load (W)</th>
+                <th>Recorded At</th>
+              </tr>
+            </thead>
+            <tbody id="readingsTableBody">
+              <tr><td colspan="6" class="text-center">No readings found.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         TAB 3: LIMITS & ALERTS (limitController & alertController)
+         ========================================================================= -->
+    <section id="tab-limits-alerts" class="tab-content">
+      <div class="grid-2">
+        
+        <!-- Left: Set Limit Form -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Set Energy Limit (POST /api/limits)</h3>
+          </div>
+          <form id="addLimitForm" class="card-body">
+            <div class="form-group">
+              <label>Limit Scope</label>
+              <select id="limitScope" class="form-control">
+                <option value="home">Whole Home</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Interval</label>
+                <select id="limitType" class="form-control">
+                  <option value="daily">Daily</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Threshold (kWh)</label>
+                <input type="number" step="0.5" id="limitValue" class="form-control" value="5.0" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Alert Trigger Percentage (%)</label>
+              <input type="number" id="alertPercentage" class="form-control" value="70" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Limit</button>
+          </form>
+        </div>
+
+        <!-- Right: Active Limits & Check Trigger -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Active Limits (GET /api/limits)</h3>
+            <button class="btn btn-sm btn-primary" id="runAlertCheckBtn">Check Limits (POST /api/alerts/check)</button>
+          </div>
+          <div class="card-body" id="limitsListContainer">
+            <p class="text-muted">Loading limits...</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Generated Alerts List -->
+      <div class="card mt-20">
+        <div class="card-header">
+          <h3>Generated Alerts (GET /api/alerts)</h3>
+          <span class="badge-danger" id="alertCountBadge">0 Alerts</span>
+        </div>
+        <div class="card-body" id="alertsListContainer">
+          <p class="text-muted">No alerts generated yet. When total consumption exceeds a limit, alerts will show here.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         TAB 4: REPORTS & COMPARISON (reportController & compareController)
+         ========================================================================= -->
+    <section id="tab-reports-compare" class="tab-content">
+      <div class="grid-2">
+        
+        <!-- Neighborhood Comparison -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Neighborhood Comparison (GET /api/compare/neighborhood)</h3>
+          </div>
+          <div class="card-body" id="compareContainer">
+            <div class="stat-row">
+              <div>
+                <div class="stat-label">Your Home Usage</div>
+                <div class="stat-val text-primary" id="compUserUsage">0.0 kWh</div>
+              </div>
+              <div class="stat-divider">VS</div>
+              <div>
+                <div class="stat-label">Neighborhood Average</div>
+                <div class="stat-val" id="compNeighborUsage">0.0 kWh</div>
+              </div>
+            </div>
+            <div class="alert-box mt-20" id="compMessage">Loading comparison...</div>
+          </div>
+        </div>
+
+        <!-- Average Consumption -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Average Across Your Homes (GET /api/compare/average)</h3>
+          </div>
+          <div class="card-body" id="averageContainer">
+            <div class="stat-val text-accent" id="avgHomesUsage">0.0 kWh</div>
+            <p class="text-muted mt-10">Average consumption across all properties registered to your account.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Monthly Report & Savings -->
+      <div class="grid-2 mt-20">
+        
+        <!-- Monthly Report -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Monthly Report (GET /api/reports/monthly)</h3>
+          </div>
+          <div class="card-body">
+            <div class="stat-val text-primary" id="monthlyTotal">0.0 kWh</div>
+            <div class="stat-label">Total Monthly Consumption</div>
+            <div class="mt-20" id="monthlyBreakdownContainer">
+              <!-- Appliance breakdown -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Month-over-Month Savings -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Savings Analysis (GET /api/reports/savings)</h3>
+          </div>
+          <div class="card-body">
+            <div class="stat-val" id="savingsKwh">0.0 kWh</div>
+            <p class="mt-10" id="savingsMessage">Evaluating month-over-month consumption...</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         TAB 5: TIPS & ADMIN (tipController & adminController)
+         ========================================================================= -->
+    <section id="tab-tips-admin" class="tab-content">
+      
+      <!-- Energy Tips (For all users) -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Energy Saving Tips (GET /api/tips)</h3>
+        </div>
+        <div class="card-body grid-3" id="tipsContainer">
+          <p class="text-muted">Loading tips...</p>
+        </div>
+      </div>
+
+      <!-- Admin Only Section -->
+      <div class="admin-wrapper mt-20" id="adminSection" style="display: none;">
+        
+        <div class="card">
+          <div class="card-header">
+            <h3>Admin: Create Device Template (POST /api/admin/templates)</h3>
+            <span class="badge-admin">Admin Only</span>
+          </div>
+          <form id="addTemplateForm" class="card-body grid-2">
+            <div class="form-group">
+              <label>Template Name</label>
+              <input type="text" id="templateName" class="form-control" placeholder="e.g. Smart Heat Pump" required>
+            </div>
+            <div class="form-group">
+              <label>Appliance Type</label>
+              <select id="templateType" class="form-control" required>
+                <option value="AC">AC</option>
+                <option value="Heater">Heater</option>
+                <option value="Geyser">Geyser</option>
+                <option value="Refrigerator">Refrigerator</option>
+                <option value="Washing Machine">Washing Machine</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Default Power (Watts)</label>
+              <input type="number" id="templatePower" class="form-control" value="1800" required>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="templateDesc" class="form-control" placeholder="e.g. High efficiency unit">
+            </div>
+            <button type="submit" class="btn btn-primary" style="grid-column: 1 / -1;">Save Template</button>
+          </form>
+        </div>
+
+        <div class="card mt-20">
+          <div class="card-header">
+            <h3>Admin: All System Devices Across All Homes (GET /api/admin/devices)</h3>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Device</th>
+                  <th>Type</th>
+                  <th>Home</th>
+                  <th>Rating</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="adminDevicesBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Simple Account Switcher Modal -->
+  <div id="authModal" class="modal">
+    <div class="modal-box">
+      <h3>Switch Demo Account</h3>
+      <p class="text-muted">Choose an account to test permissions:</p>
+      <div class="btn-stack mt-20">
+        <button class="btn btn-primary" id="loginPratikBtn">Login as Homeowner (pratik@example.com)</button>
+        <button class="btn btn-outline" id="loginAdminBtn">Login as Admin (admin@example.com)</button>
+      </div>
+      <button class="btn btn-sm btn-ghost mt-20" id="closeAuthModal">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Alert -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
