@@ -69,7 +69,10 @@ function setupSocket() {
     socket.on('connect', () => {
       socketPill.textContent = '● Live Socket Active';
       socketPill.style.color = 'var(--primary)';
-      if (currentHomeId) socket.emit('join-home', currentHomeId);
+      if (currentHomeId) {
+        socket.emit('joinHome', currentHomeId);
+        socket.emit('join-home', currentHomeId);
+      }
     });
 
     socket.on('disconnect', () => {
@@ -81,6 +84,19 @@ function setupSocket() {
     socket.on('new-reading', (reading) => {
       showToast(`⚡ Real-time Reading received: ${reading.energyConsumed} kWh`);
       loadReadings();
+    });
+
+    // Real-time energy reading update from controller
+    socket.on('energyUpdate', (data) => {
+      showToast(`⚡ ${data.deviceName || 'Device'} Reading: ${data.energyConsumed} kWh`);
+      loadReadings();
+    });
+
+    // Real-time limit breach alert from controller
+    socket.on('energyAlert', (alert) => {
+      showToast(`⚠️ Limit Alert: ${alert.message}`, true);
+      loadAlerts();
+      loadLimits();
     });
   } catch (err) {
     socketPill.textContent = '○ Socket Offline';
