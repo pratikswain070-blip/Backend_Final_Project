@@ -130,79 +130,86 @@ EnergySaver/
 
 ---
 
-## Installation
+## Quick Start: Setup and Run Instructions
 
-### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB (running locally or MongoDB Atlas)
-- npm
+### 1. Prerequisites
+- **Node.js** (v16.x or higher) - [Download Node.js](https://nodejs.org/)
+- **npm** (comes bundled with Node.js)
+- **MongoDB** (Local MongoDB Server or free cloud [MongoDB Atlas](https://www.mongodb.com/cloud/atlas))
 
-### Steps
+---
 
+### 2. Step-by-Step Installation
+
+#### Step 1: Navigate to the `EnergySaver` directory
 ```bash
-# 1. Navigate to the project directory
+# If you cloned the repository:
+cd Backend_Final_Project/EnergySaver
+
+# If you are already in the project root:
 cd EnergySaver
-
-# 2. Install dependencies
-npm install
-
-# 3. Set up environment variables
-# Edit .env file with your MongoDB URI and JWT secret
-
-# 4. Make sure MongoDB is running
-# For local MongoDB:
-mongosh
-# Or use MongoDB Compass
-
-# 5. Seed the database with sample data
-npm run seed
-
-# 6. Start the server
-npm run dev
 ```
 
----
-
-## MongoDB Setup
-
-### Option 1: Local MongoDB
-1. Install MongoDB Community Edition
-2. Start MongoDB service: `mongod`
-3. The default URI is: `mongodb://127.0.0.1:27017/energysaver`
-
-### Option 2: MongoDB Atlas (Cloud)
-1. Go to https://cloud.mongodb.com
-2. Create a free cluster
-3. Get the connection string
-4. Update `MONGO_URI` in `.env` file
-
----
-
-## Environment Variables
-
-| Variable | Description | Default |
-|---|---|---|
-| `PORT` | Server port | 5003 |
-| `MONGO_URI` | MongoDB connection string | mongodb+srv://... or mongodb://127.0.0.1:27017/energysaver |
-| `JWT_SECRET` | Secret key for JWT signing | your_jwt_secret |
-
----
-
-## How to Run
-
+#### Step 2: Install dependencies
 ```bash
-# Development mode (auto-restart on changes)
-npm run dev
-
-# Production mode
-PORT=5003 node server.js
-
-# Seed database with sample data
-npm run seed
-
-# Run verification
-npm test
+npm install
 ```
+
+#### Step 3: Configure Environment Variables
+Create a `.env` file in the `EnergySaver/` directory (you can copy `.env.example`):
+```bash
+cp .env.example .env
+```
+Inside `.env`, verify or set your variables:
+```env
+PORT=5003
+MONGO_URI=mongodb://127.0.0.1:27017/energysaver
+JWT_SECRET=energysaver_super_secret_key_2024
+```
+*(If using MongoDB Atlas, replace `MONGO_URI` with your Atlas connection string).*
+
+#### Step 4: Seed Database with Sample Data
+Populate the database with demo users, homes, devices, limits, and energy readings:
+```bash
+npm run seed
+```
+
+---
+
+### 3. How to Run the Application
+
+#### Start in Production Mode:
+```bash
+npm start
+```
+*(Runs `node server.js` on port `5003`)*
+
+#### Start in Development Mode (with Auto-Reload):
+```bash
+npm run dev
+```
+
+---
+
+### 4. Accessing the Application
+
+Once the server is running, open your web browser:
+
+| Interface | URL | Purpose |
+|---|---|---|
+| 🖥️ **Frontend Dashboard** | [http://localhost:5003](http://localhost:5003) | Interactive UI with live charts, device controls, limits, reports & Socket.io updates |
+| 📖 **Swagger API Docs** | [http://localhost:5003/api-docs](http://localhost:5003/api-docs) | Interactive OpenAPI testing console (test all 11 endpoint categories) |
+| ⚡ **API Health Check** | [http://localhost:5003/api](http://localhost:5003/api) | Verifies backend API status |
+
+---
+
+### 5. Default Login Credentials (from Seed)
+
+| Role | Email | Password | Access Level |
+|---|---|---|---|
+| **User (Homeowner)** | `pratik@example.com` | `password123` | Homes, Devices, Readings, Limits, Alerts, Reports & Tips |
+| **Admin** | `admin@example.com` | `password123` | All User features + Admin Device Templates & Tip creation |
+| **User 2** | `rahul@example.com` | `password123` | Second homeowner (used for Neighborhood Comparison) |
 
 ---
 
