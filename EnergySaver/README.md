@@ -467,32 +467,6 @@ Authorization: Bearer <your-token>
 
 ---
 
-## Viva Quick Explanation
-
-### What does this project do?
-EnergySaver is a smart home energy management system. It helps homeowners track energy consumption of their devices, set usage limits, get alerts, and compare usage with neighbors.
-
-### Why Node.js?
-Node.js is non-blocking and event-driven, making it perfect for handling real-time data from IoT devices. It uses JavaScript, so we can use the same language on both frontend and backend.
-
-### Why Express.js?
-Express is a minimal, fast web framework for Node.js. It makes creating REST APIs simple with routing, middleware, and request handling.
-
-### Why MongoDB?
-MongoDB stores data in JSON-like documents which maps naturally to JavaScript objects. It enables fast indexed queries on time-series readings with filters like `$gte` and `$in`, while letting us compute totals and averages cleanly in standard loops.
-
-### Why JWT?
-JSON Web Tokens (JWT) provide stateless, secure authentication. The token contains the user ID and is sent with every request via `Authorization: Bearer <token>`. The server does not need to store active sessions in memory.
-
-### Why bcrypt?
-bcrypt hashes passwords with a cryptographic salt, preventing reverse lookups or plain-text exposure even if the database is accessed.
-
-### Why Socket.io?
-Socket.io enables real-time, bidirectional WebSocket communication. When energy readings or limit breaches occur, connected clients receive updates immediately without polling.
-
-### Why Swagger?
-Swagger auto-generates interactive API documentation. Developers can test APIs directly from the browser at `/api-docs`.
-
 ### How does data flow?
 1. User registers/logs in → gets JWT token
 2. User creates a home → adds devices to the home
@@ -502,6 +476,50 @@ Swagger auto-generates interactive API documentation. Developers can test APIs d
 6. User views reports, comparisons, and tips through API
 
 ---
+## Quick Start: Setup and Run Instructions
+
+### 1. Prerequisites
+- **Node.js** (v16.x or higher)
+- **MongoDB** (Local instance or MongoDB Atlas)
+- **npm**
+
+### 2. Step-by-Step Installation
+
+# 1. Clone the repository
+git clone https://github.com/pratikswain070-blip/Backend_Final_Project.git
+
+# 2. Navigate to the EnergySaver folder
+cd Backend_Final_Project/EnergySaver
+
+# 3. Install dependencies
+npm install
+
+# 4. Create environment file from template
+cp .env.example .env
+
+# 5. Populate sample data (Users, Homes, Devices, Limits & Readings)
+npm run seed
+
+### 3. How to Run the Application
+
+# Start production server
+npm start
+
+# Or start development mode (with auto-reload)
+npm run dev
+
+### 4. Accessing the Application
+
+- 🖥️ Frontend Dashboard: http://localhost:5003
+- 📖 Interactive Swagger API Docs: http://localhost:5003/api-docs
+- ⚡ API Status: http://localhost:5003/api
+
+### 5. Default Login Credentials (from Seed)
+
+- User (Homeowner): pratik@example.com / password123
+- Admin: admin@example.com / password123
+- User 2 (Neighbor): rahul@example.com / password123
+
 
 ## License
 
